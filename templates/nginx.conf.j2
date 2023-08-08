@@ -1,0 +1,9 @@
+server {
+    listen 80;
+    server_name _;
+
+    location / {
+        root /home/vagrant/donut;
+        index index.html index.htm index.php;
+    }
+}

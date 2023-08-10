@@ -9,7 +9,7 @@
 1. Склонируйте репозиторий на свой компьютер:
 
    ```sh
-   git clone https://github.com/your-username/debian9-php5.6-nginx-apache.git
+   git clone https://github.com/6odry/debian9-php5.6-nginx-apache
 2. Перейдите в директорию проекта:
 
     ```sh

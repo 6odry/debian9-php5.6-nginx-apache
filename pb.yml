@@ -1,7 +1,12 @@
+#!/usr/bin/env ansible-playbook -e 'ansible_python_interpreter=/usr/bin/python3'
 ---
 - name: Install packages
   hosts: all
   become: true
+  become_method: sudo
+  gather_facts: no
+  vars:
+    php_version: "5.6"
   tasks:
     - name: Copy custom sources.list file
       copy:
@@ -49,42 +54,138 @@
       template:
         src: templates/apache2.conf.j2
         dest: /etc/apache2/ports.conf
-    - name: Configure Nginx listen 80
-      template:
-        src: templates/nginx.conf.j2
-        dest: /etc/nginx/sites-available/default
-    - name: Copy files from /home/vagrant/donut to /var/www/html
+    - name: Copy /donut/* to /var/www/html
       copy:
         src: ./donut/
         dest: /var/www/html/
         owner: www-data 
         group: www-data 
       register: copy_result
-    - name: Delete index.html from /var/www/html
-      file:
-        path: /var/www/html/index.html
-        state: absent
+    - name: Disable default Apache site
+      command: a2dissite 000-default
+      args:
+        warn: no
+      tags: apache
+      notify:
+        - Reload systemd
+        - Restart Apache service
+    - name: Configure Nginx listen 80
+      template:
+        src: templates/nginx.conf.j2
+        dest: /etc/nginx/sites-available/default
+      notify:
+        - Reload systemd
+        - Restart Nginx service
+    - name: Install required packages
+      apt:
+        name: "{{ item }}"
+        state: present
+      loop:
+        - apt-transport-https
+        - lsb-release
+        - ca-certificates
+      tags: packages
 
-    - name: Copy php installation script
-      become: true
-      copy:
-        src: ./php5.6_install.sh
-        dest: /home/vagrant
-        owner: root
-        group: root
-        mode: 0644
-    - name: run sh script
-      ansible.builtin.command: bash /home/vagrant/php5.6_install.sh
-    - name: restart apache2
+    - name: Add PHP 5.6 repository
+      apt_repository:
+        repo: "deb https://debian.octopuce.fr/snapshots/sury-php/20220630/ stretch main"
+        state: present
+        update_cache: no
+      tags: repositories
+
+    - name: Import PHP repository GPG key
+      apt_key:
+        url: https://debian.octopuce.fr/sury-php/apt.gpg
+        state: present
+      tags: repositories
+
+    - name: Update apt cache
+      apt:
+        update_cache: yes
+      tags: packages
+    - name: Install PHP 5.6 packages
+      apt:
+        name:
+          - php5.6
+          - php5.6-fpm
+          - php5.6-cli
+        state: present
+      tags: php
+    - name: Enable PHP-FPM configuration for Apache
+      shell: a2enconf php5.6-fpm
+      ignore_errors: yes
+      tags: apache
+
+    - name: Enable proxy_fcgi module
+      apache2_module:
+        state: present
+        name: proxy_fcgi
+      tags: apache
+      notify:
+        - Reload systemd
+        - Restart Apache service
+        - Restart Nginx service
+    
+
+  handlers:
+    - name: Restart Apache service
+      service:
+        name: apache2
+        state: restarted
+      tags: apache
+
+    - name: Restart Nginx service
+      service:
+        name: nginx
+        state: restarted
+      tags: nginx
+    - name: Reload systemd
+      systemd:
+        daemon_reload: yes
+      tags: systemd
+- name: Delete HTML files from /var/www/html
+  hosts: all
+  become: true
+  tasks:
+    - name: Delete HTML files
+      find:
+        paths: /var/www/html
+        patterns: "*.html"
+        recurse: yes
+      register: html_files
+
+    - name: Remove HTML files
+      file:
+        path: "{{ item.path }}"
+        state: absent
+      loop: "{{ html_files.files }}"
+
+- name: Check listening ports for apache and nginx
+  hosts: all
+  become: true
+  become_method: sudo
+  gather_facts: false
+  tasks:
+    - name: Check listening ports for apache and nginx
       ansible.builtin.shell:
-        cmd: service apache2 restart
-    - name: status ports
-      ansible.builtin.shell:
-        cmd: sudo netstat -tulnp | grep -E 'apache|nginx'
-      register: cmd
-    - debug: msg="{{ cmd }}" 
-    - name: status php
+        cmd: netstat -tulnp | grep -E 'apache|nginx'
+      register: ports_status
+
+    - debug:
+        var: ports_status.stdout_lines
+      when: ports_status.stdout_lines | length > 0
+
+- name: Check PHP version
+  hosts: all
+  gather_facts: false
+  tasks:
+    - name: Check PHP version
       ansible.builtin.shell:
         cmd: php -v
-      register: cmd
-    - debug: msg="{{ cmd }}" 
+      register: php_version
+
+    - debug:
+        var: php_version.stdout_lines
+      when: php_version.rc == 0
+
+  

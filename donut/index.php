@@ -11,7 +11,10 @@
 
 <!-- partial -->
  </script><script  src="./script.js"></script>
- <?php phpinfo(); ?>
+ <?php
+    // Вывод информации о PHP
+    phpinfo();
+  ?>
 
 </body>
 </html>

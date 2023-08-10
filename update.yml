@@ -1,7 +1,11 @@
+#!/usr/bin/env ansible-playbook -e 'ansible_python_interpreter=/usr/bin/python3'
 ---
 - name: Update PHP from 5.6 to 7.4
   hosts: all
   become: true
+  become_method: sudo
+  vars:
+    php_version: "7.4"
   tasks:
     - name: Update package cache
       apt:
@@ -34,3 +38,62 @@
       service:
         name: php7.4-fpm
         state: restarted
+
+    - name: Enable PHP-FPM configuration for Apache
+      shell: a2enconf php7.4-fpm
+      ignore_errors: yes  # Игнорировать ошибки, если конфигурация уже активирована
+    - name: Delete index.html from /var/www/html
+      file:
+        path: /var/www/html/index.html
+        state: absent
+    - name: Copy Nginx configuration file
+      template:
+        src: templates/nginx.conf.j2  # Путь к вашему шаблону конфигурации Nginx
+        dest: /etc/nginx/sites-available/default
+      notify:
+        - Reload systemd
+        - Restart Nginx service
+        - Restart Apache service
+
+
+  handlers:
+    - name: Restart Apache service
+      service:
+        name: apache2
+        state: restarted
+      tags: apache
+
+    - name: Restart Nginx service
+      service:
+        name: nginx
+        state: restarted
+      tags: nginx
+    - name: Reload systemd
+      systemd:
+        daemon_reload: yes
+      tags: systemd
+- name: Check listening ports for apache and nginx
+  hosts: all
+  gather_facts: false
+  tasks:
+    - name: Check listening ports for apache and nginx
+      ansible.builtin.shell:
+        cmd: netstat -tulnp | grep -E 'apache|nginx'
+      register: ports_status
+
+    - debug:
+        var: ports_status.stdout_lines
+      when: ports_status.stdout_lines | length > 0
+
+- name: Check PHP version
+  hosts: all
+  gather_facts: false
+  tasks:
+    - name: Check PHP version
+      ansible.builtin.shell:
+        cmd: php -v
+      register: php_version
+
+    - debug:
+        var: php_version.stdout_lines
+      when: php_version.rc == 0

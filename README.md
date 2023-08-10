@@ -1,18 +1,40 @@
-# debian9-php5.6-nginx-apache
+# Debian9-PHP5.6-NGINX-Apache
 
-pb.yml запускается после инициализации vm, используется по-умолчанию для vagrant provision.
+Этот репозиторий предоставляет конфигурацию и скрипты для развертывания виртуальной машины с операционной системой Debian 9, на которой установлены PHP 5.6, NGINX и Apache. Вы можете запустить этот проект на Windows с использованием WSL2, и для этого также необходимо установить плагин: `vagrant plugin install virtualbox_WSL2`, так же в среде WSL должны быть установлены virtualbox, vagrant, ansible.
 
-для запуска апдейта php 5.6 -> 7.4:
+## Установка
 
-bash update_php.sh 
+Для установки и запуска проекта на виртуальной машине выполните следующие шаги:
 
-или
+1. Склонируйте репозиторий на свой компьютер:
 
-PLAYBOOK=update.yml vagrant provision --provision-with ansible
+   ```sh
+   git clone https://github.com/your-username/debian9-php5.6-nginx-apache.git
+2. Перейдите в директорию проекта:
+
+    ```sh
+    cd debian9-php5.6-nginx-apache
+3. Запустите скрипт установки, который также установит необходимые зависимости:
+   
+   ```sh
+   bash install.sh
+
+Виртуальная машина будет создана и сконфигурирована, и в результате будут доступны два веб-сервера:
+
+######***Nginx (80=>8080): http://localhost:8080***
+######***Apache2 (8888=>8888): http://localhost:8888***
+
+## Обновление PHP
+
+Если вы хотите обновить версию PHP с 5.6 на 7.4, выполните следующие шаги:
+
+Запустите скрипт обновления PHP:
+
+   ```sh
+   bash update_php.sh
+   ```
+
+Или если вы хотите использовать отдельный плейбук:
 
 
-Nginx 80:
-http://185.174.137.67:8080
-
-Apache 8888:
-http://185.174.137.67:8888
+    PLAYBOOK=update.yml vagrant provision --provision-with ansible

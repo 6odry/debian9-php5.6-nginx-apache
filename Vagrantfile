@@ -6,6 +6,7 @@ Vagrant.configure("2") do |config|
   config.vm.define "test_task"
   config.vm.network "forwarded_port", guest: 80, host: 8080 # Перенаправление порта 80 (Nginx) с гостевой машины на порт 8080 хостовой машины
   config.vm.network "forwarded_port", guest: 8888, host: 8888 # Перенаправление порта 8888 (Apache) без изменения порта
+  
 
   # Определение провайдера, в данном случае VirtualBox
   config.vm.provider "virtualbox" do |vb|
@@ -16,6 +17,7 @@ Vagrant.configure("2") do |config|
   end
   
   config.vm.provision "ansible" do |ansible|
+    ansible.compatibility_mode = '2.0'
     if ENV['PLAYBOOK']
       ansible.playbook = ENV['PLAYBOOK']
     else

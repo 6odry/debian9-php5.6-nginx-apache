@@ -9,3 +9,4 @@ if [ -n "$WSL2_GUI_APPS_ENABLED" ]; then
 else
   echo "Not running in WSL2 environment. Skipping Vagrant setup."
   vagrant up
+fi

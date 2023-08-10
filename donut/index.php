@@ -15,7 +15,7 @@
 </div>
 <div>
     <?php
-    phpinfo();
+    echo "test work"
     ?>
 </div>
 </body>

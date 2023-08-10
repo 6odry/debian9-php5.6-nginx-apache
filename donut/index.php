@@ -15,7 +15,7 @@
 </div>
 <div>
     <?php
-    echo "test work"
+    echo "Hello world"
     ?>
 </div>
 </body>

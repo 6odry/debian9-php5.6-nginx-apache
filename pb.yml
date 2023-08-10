@@ -62,20 +62,14 @@
         group: www-data 
       register: copy_result
     - name: Disable default Apache site
-      command: a2dissite 000-default
-      args:
-        warn: no
+      apache2_module:
+        state: absent
+        name: 000-default
       tags: apache
-      notify:
-        - Reload systemd
-        - Restart Apache service
     - name: Configure Nginx listen 80
       template:
         src: templates/nginx.conf.j2
         dest: /etc/nginx/sites-available/default
-      notify:
-        - Reload systemd
-        - Restart Nginx service
     - name: Install required packages
       apt:
         name: "{{ item }}"

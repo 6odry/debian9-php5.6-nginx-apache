@@ -128,6 +128,10 @@
     
 
   handlers:
+    - name: Reload systemd
+      systemd:
+        daemon_reload: yes
+      tags: systemd
     - name: Restart Apache service
       service:
         name: apache2
@@ -139,10 +143,7 @@
         name: nginx
         state: restarted
       tags: nginx
-    - name: Reload systemd
-      systemd:
-        daemon_reload: yes
-      tags: systemd
+    
 - name: Delete HTML files from /var/www/html
   hosts: all
   become: true

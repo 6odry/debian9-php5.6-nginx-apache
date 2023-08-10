@@ -1,21 +1,22 @@
 <!DOCTYPE html>
-<html lang="en" >
+<html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Donut - ASCII Art</title>
-  <link rel="stylesheet" href="./style.css">
-
+    <meta charset="UTF-8">
+    <title>Donut - ASCII Art</title>
+    <link rel="stylesheet" href="./style.css">
 </head>
 <body>
 <!-- partial:index.partial.html -->
 
 <!-- partial -->
- </script><script  src="./script.js"></script>
- <?php
-    // Вывод информации о PHP
+<script src="./script.js"></script>
+<div>
+    <img src="./pic.jpg" alt="Picture">
+</div>
+<div>
+    <?php
     phpinfo();
-  ?>
-
+    ?>
+</div>
 </body>
 </html>
-  
